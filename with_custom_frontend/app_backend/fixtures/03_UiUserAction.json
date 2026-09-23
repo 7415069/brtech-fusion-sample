@@ -1,0 +1,85 @@
+{
+  "description": "UI用户操作按钮初始化",
+  "router": "/ui/user/action/add",
+  "headers": {"Authorization": "static 4a8f9c2d1b3e5a7f6c0d8e9b1a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c"},
+  "datas": [
+    {
+      "model_id": "740927871786291210", "title": "我的钱包", "key": "my_wallet", "icon": "Wallet", "action_type": "json_action", "platform": "any", "action_order": 1,
+      "action_data": {
+        "code": "view_wallet", "label": "我的钱包", "type": "component", "component": "WalletDialog", "dialogWidth": "480px",
+        "dependAction": {
+          "code": "load_my_wallet", "label": "", "type": "api", "apiUrl": "/payment/wallet/my", "includeRouterPrefix": false, "method": "POST"
+        }
+      }
+    },
+    {
+      "model_id": "740927871786291220", "title": "账户充值", "key": "recharge", "icon": "Coin", "action_type": "json_action", "platform": "any", "action_order": 2,
+      "action_data": {
+        "code": "recharge_form", "label": "账户充值", "type": "dialog", "dialogWidth": "450px", "afterAction": "payment", "layoutType": "replace",
+        "fixedData": {
+          "businessType": "recharge", "businessId": "CASH", "paySubject": "余额充值"
+        },
+        "formFields": [
+          {
+            "prop": "totalAmount", "label": "充值金额 (元)", "component": "ElInputNumber", "required": true, "span": 24, "componentProps": {"min": 0.1, "precision": 2, "style": "width:100%"}
+          }
+        ]
+      }
+    },
+    {
+      "model_id": "740927871786291280", "title": "钱包流水", "key": "wallet_flow", "icon": "Tickets", "action_type": "json_action", "platform": "any", "action_order": 3,
+      "action_data": {
+        "code": "wallet_flow",
+        "label": "钱包流水",
+        "type": "router",
+        "routerPath": "/payment/wallet/flow"
+      }
+    },
+    {
+      "model_id": "740927871786291230", "title": "--------", "key": "divider_1", "icon": "none", "action_type": "divider", "platform": "any", "action_order": 4
+    },
+    {
+      "model_id": "740927871786291240", "title": "个人中心", "key": "profile", "icon": "User", "action_type": "json_action", "platform": "any", "action_order": 5,
+      "action_data": {
+        "code": "profile_edit", "label": "个人中心", "type": "dialog", "dialogWidth": "600px", "apiUrl": "/4a/user/update", "method": "POST", "dataMode": "current", "layoutType": "update",
+        "contextMap": {
+          "modelId": "modelId"
+        },
+        "formFields": [
+          {
+            "prop": "userName", "label": "用户名称", "component": "ElInput", "required": true, "span": 24
+          },
+          {
+            "prop": "userPhone", "label": "用户手机号", "component": "ElInput", "span": 12
+          },
+          {
+            "prop": "userEmail", "label": "用户邮箱", "component": "ElInput", "span": 12
+          },
+          {
+            "prop": "userAvatar", "label": "用户头像", "component": "ElAvatar", "span": 24, "componentProps": {"max-size": 5, "accept": "image/*"}
+          }
+        ]
+      }
+    },
+    {
+      "model_id": "740927871786291250", "title": "修改密码", "key": "change_pwd", "icon": "Lock", "action_type": "json_action", "platform": "any", "action_order": 6,
+      "action_data": {
+        "code": "change_pwd_self", "label": "修改密码", "type": "dialog", "dialogWidth": "500px", "apiUrl": "/4a/user/changePassword", "method": "POST", "contentType": "application/x-www-form-urlencoded", "payloadLocation": "body", "layoutType": "replace", "afterAction": "logout",
+        "formFields": [
+          {
+            "prop": "oldPassword", "label": "旧密码", "component": "ElInput", "componentProps": {"type": "password", "show-password": true}, "required": true, "span": 24
+          },
+          {
+            "prop": "newPassword", "label": "新密码", "component": "DoublePassword", "required": true, "span": 24
+          }
+        ]
+      }
+    },
+    {
+      "model_id": "740927871786291260", "title": "--------", "key": "divider_2", "icon": "none", "action_type": "divider", "platform": "any", "action_order": 7
+    },
+    {
+      "model_id": "740927871786291270", "title": "退出登录", "key": "logout", "icon": "SwitchButton", "action_type": "api", "url": "/auth/logout", "platform": "any", "action_order": 8
+    }
+  ]
+}

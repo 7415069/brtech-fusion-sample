@@ -1,0 +1,4 @@
+file:///Users/huangyun/Projects/brtech-fusion/dist/brtech_fusion-2.0.0-py3-none-any.whl
+
+# uv pip compile requirements.in -o requirements.txt
+# uv pip install -r requirements.txt

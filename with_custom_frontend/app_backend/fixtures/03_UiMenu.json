@@ -1,0 +1,54 @@
+{
+  "description": "前端菜单结构初始化",
+  "router": "/ui/menu/add",
+  "headers": {
+    "Authorization": "static 4a8f9c2d1b3e5a7f6c0d8e9b1a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c"
+  },
+  "datas": [
+    {
+      "model_id": "menu_business", "title": "业务功能", "icon": "Briefcase", "path": "/business", "component": "Layout", "sort_order": 100000, "hidden": false
+    },
+    {
+      "model_id": "menu_sample_normal", "parent_id": "menu_business", "title": "普通模型样例管理", "icon": "UserFilled", "api_prefix": "/sampleNormal", "path": "/sampleNormal", "component": "views/sampleNormal/index", "sort_order": 100100, "hidden": false
+    },
+    {
+      "model_id": "menu_sample_recurse", "parent_id": "menu_business", "title": "递归模型样例管理", "icon": "UserFilled", "api_prefix": "/sampleRecurse", "path": "/sampleRecurse", "component": "views/sampleRecurse/index", "sort_order": 100102, "hidden": false
+    },
+    {
+      "model_id": "menu_system", "title": "底座功能", "icon": "Setting", "path": "/system", "component": "Layout", "sort_order": 200000, "hidden": false
+    },
+    {
+      "model_id": "menu_system_dict", "parent_id": "menu_system", "title": "字典管理", "icon": "CollectionTag", "api_prefix": "/dictionary", "path": "/dictionary", "component": "", "sort_order": 200100, "hidden": false
+    },
+    {
+      "model_id": "menu_system_organization", "parent_id": "menu_system", "title": "组织管理", "icon": "OfficeBuilding", "api_prefix": "/4a/organization", "path": "/organization", "user_module": false, "component": "", "sort_order": 200200, "hidden": true
+    },
+    {
+      "model_id": "menu_system_user", "parent_id": "menu_system", "title": "用户管理", "icon": "User", "api_prefix": "/4a/user", "path": "/user", "user_module": true, "component": "", "sort_order": 200300, "hidden": false
+    },
+    {
+      "model_id": "menu_system_role", "parent_id": "menu_system", "title": "角色管理", "icon": "Avatar", "api_prefix": "/4a/role", "path": "/role", "component": "", "sort_order": 200400, "hidden": false
+    },
+    {
+      "model_id": "menu_system_func_permission", "parent_id": "menu_system", "title": "功能权限管理", "icon": "Key", "api_prefix": "/4a/funcPermission", "path": "/funcPermission", "component": "", "sort_order": 200500, "hidden": false
+    },
+    {
+      "model_id": "menu_system_data_permission", "parent_id": "menu_system", "title": "数据权限管理", "icon": "Lock", "api_prefix": "/4a/dataPermission", "path": "/dataPermission", "component": "", "sort_order": 200600, "hidden": false
+    },
+    {
+      "model_id": "menu_system_operate", "parent_id": "menu_system", "title": "操作日志", "icon": "ChatLineSquare", "api_prefix": "/4a/operateLog", "path": "/operateLog", "component": "", "sort_order": 200700, "hidden": false
+    },
+    {
+      "model_id": "menu_system_auth", "parent_id": "menu_system", "title": "登录日志", "icon": "Position", "api_prefix": "/4a/authLog", "path": "/authLog", "component": "", "sort_order": 200800, "hidden": false
+    },
+    {
+      "model_id": "menu_system_task", "parent_id": "menu_system", "title": "任务管理", "icon": "AlarmClock", "api_prefix": "/task", "path": "/task", "component": "", "sort_order": 200900, "hidden": false
+    },
+    {
+      "model_id": "menu_payment", "title": "平台订阅", "icon": "Document", "path": "/payment", "component": "Layout", "sort_order": 300000, "hidden": false
+    },
+    {
+      "model_id": "menu_wallet_flow", "parent_id": "menu_payment", "title": "钱包流水", "icon": "Tickets", "api_prefix": "/payment/wallet/flow", "path": "/wallet/flow", "component": "views/walletFlow/index", "sort_order": 300305, "hidden": true
+    }
+  ]
+}
