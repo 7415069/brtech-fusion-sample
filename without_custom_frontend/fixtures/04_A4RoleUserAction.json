@@ -1,0 +1,63 @@
+{
+  "description": "4A角色与用户操作关联初始化（沿用现有数据库分配；首次导入前需先初始化03_UiUserAction.json）",
+  "router": "/4a/roleUserAction/add",
+  "headers": {
+    "Authorization": "static 4a8f9c2d1b3e5a7f6c0d8e9b1a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c"
+  },
+  "datas": [
+    {
+      "role_id": "670914605605861100", "user_action_id": "740927871786291210", "enable_status": "1", "builtin": "0", "remark": "超级管理员角色 ↔ 我的钱包"
+    },
+    {
+      "role_id": "670914605605861100", "user_action_id": "740927871786291220", "enable_status": "1", "builtin": "0", "remark": "超级管理员角色 ↔ 账户充值"
+    },
+    {
+      "role_id": "670914605605861100", "user_action_id": "740927871786291230", "enable_status": "1", "builtin": "0", "remark": "超级管理员角色 ↔ --------"
+    },
+    {
+      "role_id": "670914605605861100", "user_action_id": "740927871786291240", "enable_status": "1", "builtin": "0", "remark": "超级管理员角色 ↔ 个人中心"
+    },
+    {
+      "role_id": "670914605605861100", "user_action_id": "740927871786291250", "enable_status": "1", "builtin": "0", "remark": "超级管理员角色 ↔ 修改密码"
+    },
+    {
+      "role_id": "670914605605861100", "user_action_id": "740927871786291260", "enable_status": "1", "builtin": "0", "remark": "超级管理员角色 ↔ --------"
+    },
+    {
+      "role_id": "670914605605861100", "user_action_id": "740927871786291270", "enable_status": "1", "builtin": "0", "remark": "超级管理员角色 ↔ 退出登录"
+    },
+    {
+      "role_id": "670914605605861101", "user_action_id": "740927871786291210", "enable_status": "1", "builtin": "0", "remark": "平台管理员角色 ↔ 我的钱包"
+    },
+    {
+      "role_id": "670914605605861101", "user_action_id": "740927871786291220", "enable_status": "1", "builtin": "0", "remark": "平台管理员角色 ↔ 账户充值"
+    },
+    {
+      "role_id": "670914605605861101", "user_action_id": "740927871786291230", "enable_status": "1", "builtin": "0", "remark": "平台管理员角色 ↔ --------"
+    },
+    {
+      "role_id": "670914605605861101", "user_action_id": "740927871786291240", "enable_status": "1", "builtin": "0", "remark": "平台管理员角色 ↔ 个人中心"
+    },
+    {
+      "role_id": "670914605605861101", "user_action_id": "740927871786291250", "enable_status": "1", "builtin": "0", "remark": "平台管理员角色 ↔ 修改密码"
+    },
+    {
+      "role_id": "670914605605861101", "user_action_id": "740927871786291260", "enable_status": "1", "builtin": "0", "remark": "平台管理员角色 ↔ --------"
+    },
+    {
+      "role_id": "670914605605861101", "user_action_id": "740927871786291270", "enable_status": "1", "builtin": "0", "remark": "平台管理员角色 ↔ 退出登录"
+    },
+    {
+      "role_id": "670914605605861102", "user_action_id": "740927871786291240", "enable_status": "1", "builtin": "0", "remark": "普通人员角色 ↔ 个人中心"
+    },
+    {
+      "role_id": "670914605605861102", "user_action_id": "740927871786291250", "enable_status": "1", "builtin": "0", "remark": "普通人员角色 ↔ 修改密码"
+    },
+    {
+      "role_id": "670914605605861102", "user_action_id": "740927871786291260", "enable_status": "1", "builtin": "0", "remark": "普通人员角色 ↔ --------"
+    },
+    {
+      "role_id": "670914605605861102", "user_action_id": "740927871786291270", "enable_status": "1", "builtin": "0", "remark": "普通人员角色 ↔ 退出登录"
+    }
+  ]
+}
