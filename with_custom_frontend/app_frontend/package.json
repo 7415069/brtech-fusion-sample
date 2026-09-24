@@ -16,7 +16,7 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
     "@element-plus/theme-chalk": "^2.2.16",
-    "brtech-fusion": "file:../../../svn.local/brtech-fusion/brtech_frontend/brtech-fusion-1.0.1.tgz",
+    "brtech-fusion": "file:///Users/huangyun/Projects/brtech-fusion/brtech_frontend/brtech-fusion-2.0.0.tgz",
     "element-plus": "^2.0.0",
     "pinia": "^3.0.4",
     "qrcode.vue": "^3.6.0",

@@ -1,5 +1,5 @@
-import {createApp} from 'vue'
-import {createPinia} from 'pinia'
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import App from '@/App.vue'
 import router from '@/router'
 
@@ -19,9 +19,9 @@ app.use(router)
 // 5. 安装底座
 app.use(BrtechFusion, {
   apiPrefix: import.meta.env.VITE_API_BASE_URL,
-  routePrefix: '/admin',
-  loginPath: '/admin/login',
-  homePath: '/admin',
+  routePrefix: '/console',
+  loginPath: '/console/login',
+  homePath: '/console',
 })
 
 app.mount('#app')

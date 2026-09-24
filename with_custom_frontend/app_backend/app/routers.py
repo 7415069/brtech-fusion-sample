@@ -22,7 +22,7 @@ from .services import SampleNormalService, SampleRecurseService
 
 
 @Public(RouteKey.FIND_BATCH)
-@RouterMeta(prefix="/normal", tags=["样例 - 普通模型"], module_name="普通模型样例")
+@RouterMeta(prefix="/sampleNormal", tags=["样例 - 普通模型"], module_name="普通模型样例")
 class SampleNormalRouter(StringPKeyWithDictionaryRouter[
     SampleNormalModel, SampleNormalCrud, SampleNormalQuery, SampleNormalService
 ]):
@@ -45,7 +45,7 @@ class SampleNormalRouter(StringPKeyWithDictionaryRouter[
             return RestResponse.success(data=result)
 
 
-@RouterMeta(prefix="/recurse", tags=["样例 - 递归模型"], module_name="递归模型样例")
+@RouterMeta(prefix="/sampleRecurse", tags=["样例 - 递归模型"], module_name="递归模型样例")
 class SampleRecurseRouter(StringPKeyRecurseRouter[
     SampleRecurseModel, SampleRecurseCrud, SampleRecurseQuery, SampleRecurseService
 ]):

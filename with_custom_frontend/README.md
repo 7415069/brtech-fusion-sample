@@ -365,6 +365,41 @@ app.use(BrtechFusion, {
 
 管理后台直接使用底座 `AdminLayout` 组件，所有 CRUD 界面由后端的 `@ui_config` / `FieldOption` 注解驱动，前端 **无需为每个模块编写表格和表单代码**。
 
+### 管理后台路由配置
+
+当前 `brtech-fusion 2.0` 的 `AdminLayout` 约定：通用 CRUD 兜底路由必须命名为 **`All`**。
+若命名为 `Admin`，底座会尝试渲染自定义子路由，而当前没有子路由组件，表现为登录成功、菜单正常、内容区空白。
+
+```typescript
+const router = createRouter({
+  history: createWebHistory(getUiBasePath()),
+  routes: [
+    {path: '/', redirect: '/admin'},
+    {path: '/login', redirect: '/admin/login'},
+    {
+      path: '/admin/:pathMatch(.*)*',
+      name: 'All',
+      component: () => import('@/views/admin/Index.vue'),
+    },
+  ],
+})
+```
+
+`AdminLayout` 自带登录界面与登录状态处理。登录入口统一使用 `/admin/login`。
+菜单层级 `/business` → `/sampleNormal` 配合 `routePrefix: '/admin'`，生成前端路径
+`/admin/business/sampleNormal`；菜单的 `api_prefix: '/sampleNormal'` 则用于请求业务接口，两者不必相同。
+菜单中的 `component` 字符串不会自动导入本项目的 Vue 文件；需要自定义页面时，应在管理布局的 `children` 中显式注册对应路由和组件。
+
+部署路径由后端注入的 `window.__APP_CONFIG__` 决定：
+
+- 浏览器地址基址：`CONTEXT_PATH + UI_PATH`，由 `getUiBasePath()` 读取。
+- API 基址：`CONTEXT_PATH + API_PREFIX`；后端注入配置优先于插件的 `apiPrefix`。
+- 例如后端采用本样例默认配置时，登录地址是 `http://localhost:9876/sample/frontend/admin/login`。
+- 若运行配置为端口 `7654`、`CONTEXT_PATH` 和 `UI_PATH` 均为空，登录地址就是 `http://127.0.0.1:7654/admin/login`。
+
+修改前端后，在 `app_frontend` 目录执行 `npm run build`，产物输出到 `app_backend/static`，然后刷新浏览器。
+确认实际启动的后端使用此目录作为静态资源目录；必要时重启后端以重新加载产物。
+
 调用后端 API 示例：
 
 ```typescript

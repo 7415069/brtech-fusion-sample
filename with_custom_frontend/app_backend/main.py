@@ -14,7 +14,7 @@ from typing import Any
 from brtech_backend import get_session_maker
 from brtech_backend.a4.routers import (
     A4UserRouter, A4RoleRouter, A4FuncPermissionRouter, A4DataPermissionRouter,
-    A4RoleUserRouter, A4RoleFuncPermissionRouter, A4RoleDataPermissionRouter,
+    A4RoleUserRouter, A4RoleFuncPermissionRouter, A4RoleDataPermissionRouter, A4RoleUserActionRouter,
 )
 from brtech_backend.a4.scanner import A4PermissionScanner
 from brtech_backend.core.application import Application
@@ -63,7 +63,7 @@ class SampleApplication(Application):
         self.router_classes.extend([
             A4UserRouter, A4RoleRouter,
             A4FuncPermissionRouter, A4DataPermissionRouter,
-            A4RoleUserRouter, A4RoleFuncPermissionRouter, A4RoleDataPermissionRouter,
+            A4RoleUserRouter, A4RoleFuncPermissionRouter, A4RoleDataPermissionRouter, A4RoleUserActionRouter
         ])
         self.router_classes.extend(payment_router_classes)
         self.router_classes.extend(ui_router_classes)

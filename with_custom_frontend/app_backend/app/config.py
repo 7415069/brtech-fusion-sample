@@ -20,7 +20,7 @@ class SampleAppSettings(AppSettings):
       - 功能开关 (ENABLE_CAPTCHA, AI_ENABLE, ...)
     """
     # --- 应用信息 ---
-    TITLE: str = "brtech 底座 - 二次开发样例"
+    TITLE: str = "博然低代码平台 - 二次开发样例"
     LOGO: str = "static/favicon.svg"
     VERSION: str = "1.0.0"
     DESCRIPTION: str = "基于 brtech 底座进行二次开发的样例项目 - API 文档"
