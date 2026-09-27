@@ -1,48 +1,38 @@
-# .
+# 样例定制前端
 
-This template should help get you started developing with Vue 3 in Vite.
+Vue 3 + TypeScript + Vite 应用，通过 `brtech-fusion` 插件使用底座管理界面。
 
-## Recommended IDE Setup
+完整安装、联调、路由与发布说明见 [定制前端样例 README](../README.md)，公共后端说明见 [仓库 README](../../README.md)。
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## 环境与安装
 
-## Recommended Browser Setup
+Node.js 要求：`^20.19.0 || >=22.12.0`。
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+`package.json` 当前引用开发机上的本地 `brtech-fusion-2.0.0.tgz`，换机器需先更新路径和锁文件：
 
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+```bash
+npm install /实际路径/brtech-fusion-2.0.0.tgz
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+## 常用命令
 
-```sh
-npm run dev
+```bash
+npm run dev       # Vite 开发服务
+npm run build     # 类型检查并构建到 ../app_backend/static
+npm run preview   # 本地构建预览
+npm run lint      # 自动修复，会修改文件
+npm run format    # 格式化 src，会修改文件
 ```
 
-### Type-Check, Compile and Minify for Production
+构建会清空输出目录。静态源文件放在 `public/` 中，不要直接维护输出目录中的文件。
 
-```sh
-npm run build
-```
+## 关键配置
 
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+- 开发入口通常为 `http://localhost:5173/console/login`。
+- `src/main.ts` 的路由前缀、登录页、首页分别是 `/console`、`/console/login`、`/console`。
+- `src/router/index.ts` 的通用管理兜底路由名称为 `All`。
+- API 开发基址为 `/sample/api/v1`，Vite 代理 `/sample` 到 `http://127.0.0.1:9876`。
+- 后端当前 `.env` 使用 `7654` 和根路径，必须按上级 README 中的联调方案对齐。
+- 后端托管构建产物时，会注入运行时配置；当前后端登录地址为 `http://127.0.0.1:7654/console/login`。
+- 手写 API 示例仍有 `/normal`、`/recurse` 旧前缀，使用前应对齐后端 `/sampleNormal`、`/sampleRecurse`。

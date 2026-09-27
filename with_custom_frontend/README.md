@@ -1,423 +1,230 @@
-# brtech 底座二次开发指南
+# 定制前端样例
 
-本文档以 `with_custom_frontend` 样例项目为载体，说明如何基于 **brtech-fusion（博然低代码底座）** 进行业务系统的二次开发。
+本样例由独立 Python 后端和 Vue 3 前端组成。前端安装 `brtech-fusion` 插件并嵌入 `AdminLayout`，保留模型注解驱动的通用 CRUD 能力，同时提供自己的应用入口、路由和页面扩展位置。
 
----
+公共配置、后端开发教程、初始化和权限说明见 [仓库 README](../README.md)。只需通用管理界面时，可使用 [不定制前端样例](../without_custom_frontend/README.md)。
 
-## 目录
+## 目录与技术栈
 
-- [开发流程概览](#开发流程概览)
-- [第一步：定义数据模型 (models.py)](#第一步定义数据模型-modelspy)
-- [第二步：定义 CRUD (crud.py)](#第二步定义-crud-crudpy)
-- [第三步：定义查询模型 (schemas.py)](#第三步定义查询模型-schemaspy)
-- [第四步：定义 Service (services.py)](#第四步定义-service-servicespy)
-- [第五步：定义 Router (routers.py)](#第五步定义-router-routerspy)
-- [第六步：注册到应用入口 (main.py)](#第六步注册到应用入口-mainpy)
-- [启动运行](#启动运行)
-- [前端集成](#前端集成)
-- [翻车急救](#翻车急救)
-
----
-
-## 开发流程概览
-
-在 brtech 底座上开发一个业务模块，只需 5 步：
-
-```
-① 定义 Model  →  ② 定义 Crud  →  ③ 定义 Query  →  ④ 定义 Service  →  ⑤ 定义 Router
-```
-
-底座自动完成：数据库建表 → RESTful API 注册 → UI 配置生成 → 权限体系接入。
-
-从头到尾只需要编写 Python 代码，**不需要写一行前端代码** 就能得到一个完整的后台管理界面。
-
----
-
-## 第一步：定义数据模型 (models.py)
-
-### 模型基类
-
-| 用途 | 基类 | 表特征 |
-|------|------|--------|
-| 普通业务表 | `StringPKeyModel` | 主键为雪花 ID（字符串） |
-| 树形结构表 | `StringPKeyRecurseModel` | 自带 `parent_id` 字段，支持递归 |
-| 自增主键表 | `IntegerPKeyModel` | 主键为自增整数 |
-
-### 字段注解
-
-```python
-from typing import Annotated
-from brtech_backend.core.annotations import (
-    FieldOption, UIComponent, EnableQuery, QueryType,
-    Dictionary, StoreType, DataOption,
-)
-from sqlmodel import Field as SQLModelField
-
-class YourModel(StringPKeyModel, table=True):
-    __tablename__ = "your_table"
-
-    field_name: Annotated[
-        str | None,
-        FieldOption(                          # UI 配置
-            table_show=True,                   # 表格列
-            add_show=True, edit_show=True,     # 新增/编辑表单
-            search_show=True,                  # 搜索栏
-            span=12,                           # 表单布局列数 (1-24)
-            component=UIComponent.INPUT,       # 前端组件
-        ),
-        EnableQuery(query_type=QueryType.LIKE),  # 搜索方式
-    ] = SQLModelField(
-        description="字段说明",
-        sa_type=String, max_length=255, nullable=False,
-    )
+```text
+with_custom_frontend/
+├── app_backend/
+│   ├── main.py                   # 后端入口
+│   ├── app/                      # 模型、CRUD、查询、服务、路由、配置
+│   ├── fixtures/                 # 初始化数据与模板
+│   ├── static/                   # npm run build 的输出目录
+│   ├── .env
+│   └── requirements.in / requirements.txt
+└── app_frontend/
+    ├── src/main.ts                # 安装 Pinia、Router、BrtechFusion
+    ├── src/router/index.ts        # /console 路由及 All 兜底路由
+    ├── src/views/console/Index.vue # 嵌入 AdminLayout
+    ├── src/views/Login.vue        # 备用登录页面示例，当前未在路由中注册
+    ├── src/stores/user.ts         # 用户状态示例
+    ├── src/api/sample/index.ts    # 手写 API 封装示例
+    ├── public/static/             # 图标、Logo、二维码资源
+    ├── .env.development
+    ├── .env.production
+    ├── package.json
+    └── vite.config.ts
 ```
 
-### 可用组件一览
+后端要求 Python `>=3.11`。前端使用 Vue 3、TypeScript、Vue Router、Pinia、Element Plus、Vite 7；Node.js 要求为 `^20.19.0 || >=22.12.0`，与 `package.json` 一致。
 
-| 组件 | 用途 | 注解 |
-|------|------|------|
-| `UIComponent.INPUT` | 文本输入 | `EnableQuery(QueryType.LIKE)` |
-| `UIComponent.TEXTAREA` | 多行文本 | 适合备注类字段 |
-| `UIComponent.RICH_TEXT` | 富文本编辑器 | 适合大段 HTML 内容 |
-| `UIComponent.INPUT_NUMBER` | 数字输入 | `component_props={"min": 0}` |
-| `UIComponent.SELECT` | 下拉选择 | + `Dictionary` 字典翻译 |
-| `UIComponent.SWITCH` | 开关 | + `yes_no` 字典显示"是/否" |
-| `UIComponent.DATE_PICKER` | 日期选择 | `EnableQuery(QueryType.DATE_RANGE)` |
-| `UIComponent.IMAGE` | 图片上传 | `component_props=UploadComponentProps(...)` |
-| `UIComponent.UPLOAD` | 文件上传 | 同上 |
-| `UIComponent.TREE_SELECT` | 树形选择 | + `DataOption` 指定数据源 |
-| `UIComponent.JSON_EDITOR` | JSON 编辑器 | 适合存储配置类数据 |
-| `UIComponent.COLOR_PICKER` | 颜色选择 | 支持透明度 |
-| `UIComponent.TAG_INPUT` | 标签输入 | 存储为 JSON 数组 |
-| `UIComponent.SELECT_V2` | 增强下拉 | 支持远程搜索 |
+## 依赖准备
 
-### 字典翻译
+后端 `requirements.in`、`requirements.txt` 引用本地 `brtech_fusion-2.0.0-py3-none-any.whl`；前端 `package.json` 引用本地 `brtech-fusion-2.0.0.tgz`。换机器需修改这些引用及相关锁文件，不能直接沿用开发者的绝对路径。
 
-```python
-select_field: Annotated[
-    str | None,
-    FieldOption(component=UIComponent.SELECT),
-    Dictionary(
-        store_type=StoreType.DICTIONARY_VALUE,  # 值存字典表
-        dictionary_type="your_dict_type",         # 字典类型编码
-        display_field_name="select_field_display",  # 自动生成的显示字段名
-    ),
-] = ...
-
-# 显示字段（无需存数据库）
-select_field_display: Annotated[
-    str, FieldOption(table_show=False)
-] = ExtraSQLModelField(sa_column_exclude=True)
-```
-
-### 关联数据源（下拉/树选择引用其他模型）
-
-```python
-ref_id: Annotated[
-    str | None,
-    FieldOption(
-        component=UIComponent.TREE_SELECT,
-        data_option=DataOption(
-            model_cls="YourReferencedModel",   # 引用的模型类名（字符串）
-            lazy_load=True,                     # 懒加载
-            path="/prefix/query/all",           # 数据接口路径
-            label_field="name",                 # 显示字段
-            value_field="model_id",             # 值字段
-        ),
-    ),
-] = SQLModelField(...)
-```
-
-### 页面配置
-
-```python
-from brtech_backend.core.annotations import (
-    ui_config, Action, StandardAdd, StandardEdit,
-    StandardDetail, StandardDelete,
-)
-
-@ui_config(
-    module_name="你的模块名称",     # 前端菜单和标题
-    action_column_width=280,
-    layout=[                       # 表单布局
-        "field1", "field2",
-        FieldOption(prop="long_field", span=24),
-        # 系统字段通常隐藏
-        FieldOption(prop="create_timestamp", table_show=False, add_show=False, ...),
-    ],
-    page_actions=[StandardAdd()],  # 列表页顶部按钮
-    row_actions=[                  # 行操作按钮
-        StandardDetail(),
-        StandardEdit(),
-        StandardDelete(),
-        Action(code="custom", label="自定义", icon="View",
-               type=ActionType.API, api_url="/prefix/action/{modelId}",
-               method="POST", payload_location=PayloadLocation.PATH),
-    ],
-)
-class YourModel(StringPKeyModel, table=True):
-    ...
-```
-
-### 递归模型特殊配置
-
-```python
-@ui_config(
-    tree_table=True,     # 树形表格
-    load_uri="/query/all",
-    load_lazy=True,      # 懒加载
-    table_layout=["name"],  # 树形表格只显示名称列
-)
-class YourTreeModel(StringPKeyRecurseModel, table=True):
-    ...
-```
-
----
-
-## 第二步：定义 CRUD (crud.py)
-
-```python
-from brtech_backend.core.crud import StringPKeyCrud, StringPKeyRecurseCrud
-
-class YourCrud(StringPKeyCrud[YourModel]):
-    """数据访问层 — 继承即用，无需任何代码"""
-    pass
-
-class YourTreeCrud(StringPKeyRecurseCrud[YourTreeModel]):
-    """递归模型 CRUD — 自动处理树形结构的增删改查"""
-    pass
-```
-
-如需要自定义查询方法，直接在此编写 SQLAlchemy 语句。
-
----
-
-## 第三步：定义查询模型 (schemas.py)
-
-```python
-class YourQuery(StringPKeyQuery[YourModel]):
-    """查询模型 — 按需重写 custom_spec 实现复杂搜索"""
-
-    # 新增自定义查询字段
-    mixed_keyword: str | None = Field(default=None)
-
-    def __init__(self, /, **data):
-        super().__init__(**data)
-        self._skip_fields.add("mixed_keyword")  # 不让底座自动处理
-
-    def custom_spec(self, stmt, model):
-        # 先调用父类（处理 EnableQuery 注解的字段）
-        stmt = super().custom_spec(stmt, model)
-        # 再添加自定义条件
-        if self.mixed_keyword:
-            stmt = stmt.where(or_(
-                model.field1.like(f"%{self.mixed_keyword}%"),
-                model.field2.like(f"%{self.mixed_keyword}%"),
-            ))
-        return stmt
-
-    def apply_sorting(self, stmt, model):
-        return stmt.order_by(desc(getattr(model, 'create_timestamp')))
-```
-
----
-
-## 第四步：定义 Service (services.py)
-
-```python
-class YourService(StringPKeyWithDictionaryService[
-    YourModel, YourCrud, YourQuery
-]):
-    """业务逻辑层 — 生命周期钩子 + 自定义方法"""
-
-    # --- 生命周期钩子 ---
-    async def pre_create(self, user_id, model):
-        await super().pre_create(user_id, model)
-        # 创建前：设默认值、做校验
-        if not model.status:
-            model.status = "active"
-
-    async def post_create(self, user_id, model):
-        await super().post_create(user_id, model)
-        # 创建后：发通知、写日志、触发异步任务
-
-    async def pre_update(self, user_id, old_model, new_model, update_fields: set):
-        await super().pre_update(user_id, old_model, new_model, update_fields)
-        # 更新前：校验唯一性等
-
-    async def pre_delete(self, user_id, model):
-        await super().pre_delete(user_id, model)
-        # 删除前：级联清理等
-
-    # --- 自定义业务方法（由 router 调用）---
-    async def some_business_logic(self, user_id, model_id) -> str | None:
-        model = await self.get(user_id, model_id)
-        return str(model) if model else None
-```
-
----
-
-## 第五步：定义 Router (routers.py)
-
-```python
-from brtech_backend.core.routers import RouterMeta, Public, RouteKey
-
-@Public(RouteKey.FIND_BATCH)   # 标记 find_batch 接口允许匿名访问
-@RouterMeta(
-    prefix="/your-prefix",
-    tags=["你的标签"],
-    module_name="你的模块名称",   # 需与 @ui_config 一致
-)
-class YourRouter(StringPKeyWithDictionaryRouter[
-    YourModel, YourCrud, YourQuery, YourService
-]):
-    """
-    路由层 — 自动注册全部 CRUD 接口
-    如需自定义 API，重写 _register_routes
-    """
-    def _register_routes(self):
-        super()._register_routes()
-
-        @self.router.post("/customAction/{model_id}", ...)
-        async def custom_action(
-            model_id: str = Path(...),
-            service: YourService = Depends(self._get_service),
-            auth_context: AuthContext = Depends(self.user_dependency),
-        ):
-            result = await service.some_business_logic(
-                auth_context.user_id, model_id)
-            return RestResponse.success(data=result)
-```
-
-### 自动注册的 API
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/{prefix}/add` | 新增 |
-| POST | `/{prefix}/delete` | 删除 |
-| POST | `/{prefix}/update` | 修改 |
-| POST | `/{prefix}/find/{id}` | 单条查询 |
-| POST | `/{prefix}/find/batch` | 批量查询 |
-| POST | `/{prefix}/query/page` | 分页查询 |
-| POST | `/{prefix}/query/all` | 查询全部 |
-| POST | `/{prefix}/excel/import` | Excel 导入 |
-| POST | `/{prefix}/excel/export` | Excel 导出 |
-
----
-
-## 第六步：注册到应用入口 (main.py)
-
-```python
-from app.config import your_app_settings
-from app.routers import your_router_classes
-
-# 1. 覆盖默认配置
-install_all_settings(your_app_settings)
-
-# 2. 创建 Application，在 prepare 中注册路由
-class YourApplication(Application):
-    def prepare(self):
-        super().prepare()
-        # ... 注册系统模块 ...
-        self.router_classes.extend(your_router_classes)  # ← 注册业务路由
-
-creator = YourApplication(app_settings)
-app = creator.get_app()
-```
-
----
-
-## 启动运行
-
-### 后端
+例如在前端目录执行以下命令，可设置实际 tgz 来源：
 
 ```bash
-pip install -r requirements.txt
+npm install /实际路径/brtech-fusion-2.0.0.tgz
+```
+
+后端 wheel 路径调整与 uv 依赖清单生成方式见仓库 README。前后端底座包应使用匹配版本。
+
+## 方式一：构建前端，由后端统一提供服务
+
+这种方式使用后端注入的运行时配置，适合确认完整集成效果和部署。
+
+从仓库根目录执行，先构建前端：
+
+```bash
+cd with_custom_frontend/app_frontend
+npm install
+npm run build
+```
+
+构建会先执行 `vue-tsc -b` 类型检查，再由 Vite 打包，输出到 `../app_backend/static/`。然后启动后端：
+
+```bash
+cd ../app_backend
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+mkdir -p var
 python main.py
 ```
 
-服务默认运行在 http://localhost:9876，API 文档在 `/{context_path}{api_prefix}/docs`。
+当前后端 `.env` 的端口为 `7654`，上下文与 UI 挂载路径均为根路径：
 
-### 前端
+| 入口 | 当前地址 |
+| --- | --- |
+| 应用 | <http://127.0.0.1:7654/> |
+| 登录 | <http://127.0.0.1:7654/console/login> |
+| API 文档 | <http://127.0.0.1:7654/docs> |
+| API 基址 | `http://127.0.0.1:7654/api/v1` |
+
+初始账号 `root`、`admin` 的密码见 `app_backend/fixtures/02_A4User.json`。已初始化数据库中的信息优先于文件中初始值。
+
+`vite.config.ts` 设置了 `emptyOutDir: true`，每次构建会清空后端 `static/` 再写入产物。要保留的前端静态文件应放到 `app_frontend/public/`；数据库、上传文件等持久数据不要存放在该输出目录。
+
+如果未构建，后端可能回退到内置前端，因此“页面可以打开”并不能证明加载的是定制版本。应确认 `app_backend/static/index.html` 存在。
+
+## 方式二：Vite 开发服务器联调
+
+当前前端配置是：
+
+```text
+开发端口：5173
+VITE_API_BASE_URL=/sample/api/v1
+代理：/sample → http://127.0.0.1:9876
+```
+
+这些值对应后端 Python 默认配置，而后端当前 `.env` 使用端口 `7654` 和根路径。开始联调前必须选择一组一致的配置。
+
+### 方案 A：保留现有 Vite 配置
+
+在已安装依赖的 `app_backend` 目录，以进程环境变量覆盖 `.env`：
 
 ```bash
-npm install
+PORT=9876 CONTEXT_PATH=/sample UI_PATH=/frontend python main.py
+```
+
+另开终端，从 `app_frontend` 目录启动：
+
+```bash
 npm run dev
 ```
 
-前端开发服务器默认运行在 http://localhost:5173，`vite.config.ts` 中配置了 `/sample` 路径的反代到后端。
+访问 <http://localhost:5173/console/login>。Vite 直接提供页面时，不会经过后端 HTML 配置注入；开发 API 使用 `.env.development` 的 `/sample/api/v1`，请求经 `/sample` 代理进入后端。
 
----
+### 方案 B：保留当前后端 `.env`
 
-## 前端集成
+将 `app_frontend/.env.development` 改为：
 
-前端安装 `brtech-fusion` 插件后：
+```dotenv
+VITE_API_BASE_URL=/api/v1
+```
+
+将 `vite.config.ts` 中的代理调整为：
 
 ```typescript
-// main.ts
+proxy: {
+  '/api': {
+    target: 'http://127.0.0.1:7654',
+    changeOrigin: true,
+  },
+},
+```
+
+分别执行后端 `python main.py` 与前端 `npm run dev`，访问同一个 Vite 登录地址。环境文件或 Vite 配置修改后需重启开发服务器。
+
+两种方案二选一即可；不要同时保留不匹配的 API 基址和代理规则。Vite 端口如被占用，以终端打印的地址为准。
+
+## 路由与插件配置
+
+当前 `src/main.ts` 使用：
+
+```typescript
 app.use(BrtechFusion, {
   apiPrefix: import.meta.env.VITE_API_BASE_URL,
-  routePrefix: '/admin',
-  loginPath: '/admin/login',
-  homePath: '/admin',
+  routePrefix: '/console',
+  loginPath: '/console/login',
+  homePath: '/console',
 })
 ```
 
-管理后台直接使用底座 `AdminLayout` 组件，所有 CRUD 界面由后端的 `@ui_config` / `FieldOption` 注解驱动，前端 **无需为每个模块编写表格和表单代码**。
-
-### 管理后台路由配置
-
-当前 `brtech-fusion 2.0` 的 `AdminLayout` 约定：通用 CRUD 兜底路由必须命名为 **`All`**。
-若命名为 `Admin`，底座会尝试渲染自定义子路由，而当前没有子路由组件，表现为登录成功、菜单正常、内容区空白。
+`src/router/index.ts` 的主要配置为：
 
 ```typescript
 const router = createRouter({
   history: createWebHistory(getUiBasePath()),
   routes: [
-    {path: '/', redirect: '/admin'},
-    {path: '/login', redirect: '/admin/login'},
+    { path: '/', redirect: '/console' },
+    { path: '/login', redirect: '/console/login' },
     {
-      path: '/admin/:pathMatch(.*)*',
+      path: '/console/:pathMatch(.*)*',
       name: 'All',
-      component: () => import('@/views/admin/Index.vue'),
+      component: () => import('@/views/console/Index.vue'),
+      meta: { title: '管理控制台', requiresAuth: true },
     },
   ],
 })
 ```
 
-`AdminLayout` 自带登录界面与登录状态处理。登录入口统一使用 `/admin/login`。
-菜单层级 `/business` → `/sampleNormal` 配合 `routePrefix: '/admin'`，生成前端路径
-`/admin/business/sampleNormal`；菜单的 `api_prefix: '/sampleNormal'` 则用于请求业务接口，两者不必相同。
-菜单中的 `component` 字符串不会自动导入本项目的 Vue 文件；需要自定义页面时，应在管理布局的 `children` 中显式注册对应路由和组件。
+这段代码为关键配置摘录，导入语句见源文件。通用 CRUD 兜底路由名称保留为 `All`，它是当前 `AdminLayout` 的约定。不要仅为更换名称改为 `Admin` 或 `Console`，否则可能进入自定义子路由渲染分支，表现为菜单正常但内容空白。
 
-部署路径由后端注入的 `window.__APP_CONFIG__` 决定：
+`src/views/console/Index.vue` 仅嵌入 `<AdminLayout/>`。当前登录由底座处理，`src/views/Login.vue` 没有注册为当前登录路由。
 
-- 浏览器地址基址：`CONTEXT_PATH + UI_PATH`，由 `getUiBasePath()` 读取。
-- API 基址：`CONTEXT_PATH + API_PREFIX`；后端注入配置优先于插件的 `apiPrefix`。
-- 例如后端采用本样例默认配置时，登录地址是 `http://localhost:9876/sample/frontend/admin/login`。
-- 若运行配置为端口 `7654`、`CONTEXT_PATH` 和 `UI_PATH` 均为空，登录地址就是 `http://127.0.0.1:7654/admin/login`。
+### 三种路径不要混淆
 
-修改前端后，在 `app_frontend` 目录执行 `npm run build`，产物输出到 `app_backend/static`，然后刷新浏览器。
-确认实际启动的后端使用此目录作为静态资源目录；必要时重启后端以重新加载产物。
+| 路径 | 示例 | 作用 |
+| --- | --- | --- |
+| UI 部署基址 | `/sample/frontend` | `getUiBasePath()` 使用的浏览器路由 base |
+| 前端页面路由 | `/console/business/sampleNormal` | 由路由前缀和菜单层级构成 |
+| 后端 API | `/sample/api/v1/sampleNormal/query/page` | 由后端上下文、API 前缀与模块路由构成 |
 
-调用后端 API 示例：
+后端托管构建产物时会注入 `window.__APP_CONFIG__`，API 基址优先使用后端运行时配置；不要只检查前端 `.env.production`。使用 Python 默认路径时，完整登录地址为 `http://127.0.0.1:9876/sample/frontend/console/login`。
+
+## 自定义界面与 API
+
+- 通用 CRUD：优先修改后端 `@ui_config` 和字段注解，不必创建每个模块的 Vue 页面。
+- 品牌资源：修改 `public/static/`，然后重新构建。
+- 独立页面：创建 Vue 组件并在 Vue Router 中显式注册。
+- 管理布局中的自定义页面：按 `AdminLayout` 的子路由模式配置对应组件，同时保留通用 CRUD 兜底能力。
+
+菜单中的 `component` 字符串不会自动导入仓库中的 Vue 文件。增加自定义页面需要同时考虑前端路由、菜单路径以及权限配置。
+
+调用接口使用底座 `request`，它负责使用配置的 API 基址，例如：
 
 ```typescript
-import {request} from 'brtech-fusion'
+import { request } from 'brtech-fusion'
 
-const {data} = await request.post('/your-prefix/query/page', {
-  page: 1, size: 20, /* 查询条件 */
+const response = await request.post('/sampleNormal/query/page', {
+  page: 1,
+  size: 20,
 })
 ```
 
----
+请求与响应字段以运行中的 OpenAPI 为准。传入模块相对路径即可，不要再次手动拼接 `/api/v1`。
 
-## 翻车急救
+现有 `src/api/sample/index.ts` 是手写封装参考，仍使用 `/normal`、`/recurse`，与后端 `/sampleNormal`、`/sampleRecurse` 不一致；使用前需对齐。后端 `models.py` 中自定义按钮也保留旧前缀。JSON 字段名应根据接口核对，尤其是树选择字段。文档更新未修改这些代码。
 
-| 现象 | 原因 | 解决 |
-|------|------|------|
-| 启动报 `table xxx already exists` | 模型变更后表已存在 | 删表重建，或加 `__table_args__ = {"extend_existing": True}` |
-| 前端显示空白 | API 路径不对 | 检查 `.env` 的 `VITE_API_BASE_URL` 是否与服务端 `CONTEXT_PATH + API_PREFIX` 一致 |
-| 下拉选字典没数据 | 字典类型未初始化 | 检查 `fixtures/01_dictionary.json` 是否包含对应类型 |
-| 登录提示"用户不存在" | Fixtures 未注入 | 首次启动后检查数据库 `a4_user` 表是否有数据 |
-| Permission denied | OSS 配置不对 | 检查 `OSS_ENDPOINT / ACCESS_KEY / SECRET_KEY` |
+## 前端常用命令
+
+在 `app_frontend` 执行：
+
+| 命令 | 作用 |
+| --- | --- |
+| `npm install` | 安装依赖 |
+| `npm run dev` | 启动 Vite 开发服务 |
+| `npm run build` | 类型检查并构建到后端 static |
+| `npm run preview` | 本地预览构建产物；不等同于后端托管和配置注入 |
+| `npm run lint` | ESLint 检查并自动修复，会修改文件 |
+| `npm run format` | 格式化 src，会修改文件 |
+
+## 发布和排错
+
+先构建前端，再发布 `app_backend` 的代码、完整 `static/`、fixtures、依赖及目标环境配置。正式访问由后端或正确配置的反向代理提供，不能把 `npm run dev` 当作发布步骤。
+
+| 现象 | 优先检查 |
+| --- | --- |
+| npm 找不到 brtech-fusion | tgz 地址与 package-lock 中的本地引用 |
+| 开发服务器 API 连接失败 | 是否把后端 7654 与 Vite 9876 配置混用 |
+| 登录后内容为空 | `All` 路由名称、模块接口响应和浏览器控制台 |
+| 修改 Vue 后后端页面没变 | 是否重新构建到正在运行的后端 static，必要时重启并刷新缓存 |
+| 定制页面路径 404 | 是否显式注册 Vue 路由，代理是否支持 SPA 页面回退 |
+| 构建后静态文件消失 | `emptyOutDir` 会清空输出目录，应把源资源放 public |
+
+后端配置、权限、数据初始化、数据库迁移和 PEX 打包的限制见 [仓库 README](../README.md)。

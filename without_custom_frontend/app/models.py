@@ -8,6 +8,8 @@ brtech 底座二次开发 - 数据模型样例
 
 每个字段的 prop 直接反映其演示的注解/组件类型，方便作为拷贝模板使用。
 """
+from typing import Annotated
+
 from brtech_backend.core.annotations import (
     FieldOption, UIComponent, DataOption,
     Action, StandardAdd, StandardEdit, StandardDetail, StandardDelete,
@@ -15,10 +17,9 @@ from brtech_backend.core.annotations import (
 )
 from brtech_backend.core.enums import ActionType, PayloadLocation
 from brtech_backend.core.extra.sqlmodel_extra import ExtraSQLModelField
-from brtech_backend.core.models import StringPKeyModel, StringPKeyRecurseModel
+from brtech_backend.core.models import StringPKeyModel, StringPKeyRecurseModel, HDatetime
 from sqlalchemy import String, Integer, Text, DateTime, JSON
 from sqlmodel import Field as SQLModelField
-from typing import Annotated
 
 
 # =============================================================
@@ -30,13 +31,8 @@ from typing import Annotated
     action_column_width=280,
     layout=[
         # 按组件类型分组展示
-        "string_field", "int_field", "select_field", "date_field",
-        FieldOption(prop="lob_string_field", span=24),
-        "switch_field", "color_field",
-        FieldOption(prop="treeselect_field", span=12),
-        FieldOption(prop="tag_field", span=12),
-        FieldOption(prop="image_field", span=12),
-        FieldOption(prop="json_field", span=12),
+        "string_field", "int_field", "select_field", "date_field", "lob_string_field",
+        "switch_field", "color_field", "tree_select_field", "tag_field", "image_field", "json_field",
         # 系统字段（通常隐藏）
         FieldOption(prop="create_person", table_show=False, add_show=False, edit_show=False, search_show=False, detail_show=False, span=6),
         FieldOption(prop="create_timestamp", table_show=False, add_show=False, edit_show=False, search_show=False, span=6),
@@ -65,13 +61,15 @@ class SampleNormalModel(StringPKeyModel, table=True):
     # ── 字符串输入框 ──
     string_field: Annotated[
         str | None,
-        FieldOption(table_show=True, add_show=True, edit_show=True, detail_show=True,
-                    search_show=True, required=True, search_required=False,
-                    span=12, column_width=300, search_span=9,
-                    component=UIComponent.INPUT),
+        FieldOption(
+            show=True, search_show=True,
+            required=True, search_required=False,
+            span=12, column_width=300, search_span=8,
+            component=UIComponent.INPUT
+        ),
         EnableQuery(query_type=QueryType.LIKE),
     ] = SQLModelField(
-        description="字符串字段 (INPUT + LIKE 查询)",
+        description="字符串字段",
         sa_type=String, max_length=256, nullable=False,
         sa_column_kwargs={"name": "string_field", "comment": "字符串字段"},
     )
@@ -79,11 +77,14 @@ class SampleNormalModel(StringPKeyModel, table=True):
     # ── 大文本 / 富文本 ──
     lob_string_field: Annotated[
         str | None,
-        FieldOption(table_show=False, add_show=True, edit_show=True, detail_show=True,
-                    search_show=False, required=False,
-                    component=UIComponent.TEXTAREA, component_props={"rows": 3}),
+        FieldOption(
+            show=True, search_show=False,
+            required=False, search_required=False,
+            span=24, search_span=8,
+            component=UIComponent.TEXTAREA, component_props={"rows": 3}
+        ),
     ] = SQLModelField(
-        description="大文本字段 (RICH_TEXT / TEXTAREA)",
+        description="大文本字段",
         sa_type=Text, nullable=True,
         sa_column_kwargs={"name": "lob_string_field", "comment": "大文本字段"},
     )
@@ -91,14 +92,16 @@ class SampleNormalModel(StringPKeyModel, table=True):
     # ── 数字输入框 ──
     int_field: Annotated[
         int | None,
-        FieldOption(table_show=True, add_show=True, edit_show=True, detail_show=True,
-                    search_show=True, required=False, search_required=False,
-                    span=8, search_span=6,
-                    component=UIComponent.INPUT_NUMBER,
-                    component_props={"min": 0, "max": 999999}),
+        FieldOption(
+            show=True, search_show=False,
+            required=False, search_required=False,
+            span=12, search_span=6,
+            component=UIComponent.INPUT_NUMBER,
+            component_props={"min": 0, "max": 999999, "controls-position": "right"},
+        ),
         EnableQuery(query_type=QueryType.EQ),
     ] = SQLModelField(
-        description="整数字段 (INPUT_NUMBER)",
+        description="整数字段",
         sa_type=Integer, nullable=True,
         sa_column_kwargs={"name": "int_field", "comment": "整数字段"},
     )
@@ -106,17 +109,16 @@ class SampleNormalModel(StringPKeyModel, table=True):
     # ── 下拉选择 (字典翻译) ──
     select_field: Annotated[
         str | None,
-        FieldOption(table_show=True, add_show=True, edit_show=True, detail_show=True,
-                    search_show=True, required=True, search_required=False,
-                    span=8, search_span=4,
-                    component=UIComponent.SELECT),
-        Dictionary(store_type=StoreType.DICTIONARY_VALUE,
-                   dictionary_type="sample_select_type",
-                   display_field_name="select_field_display"),
+        FieldOption(
+            show=True, search_show=True, required=True, search_required=False,
+            span=12, search_span=4,
+            component=UIComponent.SELECT
+        ),
+        Dictionary(store_type=StoreType.DICTIONARY_VALUE, dictionary_type="sample_select_type", display_field_name="select_field_display"),
         EnableQuery(query_type=QueryType.EQ),
     ] = SQLModelField(
         default="option_1",
-        description="下拉选择字段 (SELECT + Dictionary 翻译)",
+        description="下拉选择字段",
         sa_type=String, max_length=36, nullable=False,
         sa_column_kwargs={"name": "select_field", "comment": "下拉选择字段"},
     )
@@ -128,36 +130,37 @@ class SampleNormalModel(StringPKeyModel, table=True):
     # ── 开关 ──
     switch_field: Annotated[
         str | None,
-        FieldOption(table_show=True, add_show=True, edit_show=True, detail_show=True,
-                    search_show=True, required=False, search_required=False,
-                    span=6, search_span=4,
-                    component=UIComponent.SWITCH),
-        Dictionary(store_type=StoreType.DICTIONARY_VALUE,
-                   dictionary_type="yes_no",
-                   display_field_name="switch_field_display"),
+        FieldOption(
+            show=True, search_show=False,
+            required=False, search_required=False,
+            span=6, search_span=4,
+            component=UIComponent.SWITCH
+        ),
+        Dictionary(store_type=StoreType.DICTIONARY_VALUE, dictionary_type="yes_no", display_field_name="switch_field_display"),
         EnableQuery(query_type=QueryType.EQ),
     ] = SQLModelField(
         default="0",
-        description="开关字段 (SWITCH + yes_no 字典)",
+        description="开关字段",
         sa_type=String, max_length=4, nullable=False,
         sa_column_kwargs={"name": "switch_field", "comment": "开关字段"},
     )
     switch_field_display: Annotated[
         str | None,
-        FieldOption(table_show=False, add_show=False, edit_show=False,
-                    detail_show=False, search_show=False),
+        FieldOption(show=False, search_show=False),
     ] = ExtraSQLModelField(description="开关字段显示值", sa_column_exclude=True)
 
     # ── 日期选择 ──
     date_field: Annotated[
-        str | None,
-        FieldOption(table_show=True, add_show=True, edit_show=True, detail_show=True,
-                    search_show=True, required=False, search_required=False,
-                    span=8, search_span=5,
-                    component=UIComponent.DATE_PICKER,
-                    component_props=FieldOption.DatePickerComponentProps(type="date")),
+        HDatetime(fmt='%Y-%m-%d') | None,
+        FieldOption(
+            show=True, search_show=True,
+            required=False, search_required=False,
+            span=12, search_span=4,
+            component=UIComponent.DATE_PICKER,
+            component_props=FieldOption.DatePickerComponentProps(type="date")
+        ),
     ] = SQLModelField(
-        description="日期字段 (DATE_PICKER + 范围查询)",
+        description="日期字段",
         sa_type=DateTime, nullable=True,
         sa_column_kwargs={"name": "date_field", "comment": "日期字段"},
     )
@@ -165,14 +168,14 @@ class SampleNormalModel(StringPKeyModel, table=True):
     # ── 图片上传 ──
     image_field: Annotated[
         str | None,
-        FieldOption(table_show=False, add_show=True, edit_show=True, detail_show=True,
-                    search_show=False,
-                    component=UIComponent.IMAGE,
-                    component_props=FieldOption.UploadComponentProps(
-                        accept="image/*", max_size=10, limit=1,
-                    )),
+        FieldOption(
+            show=True, search_show=False,
+            span=24,
+            component=UIComponent.IMAGE,
+            component_props=FieldOption.UploadComponentProps(accept="image/*", max_size=10, limit=1)
+        ),
     ] = SQLModelField(
-        description="图片字段 (IMAGE / UPLOAD)",
+        description="图片字段",
         sa_type=String, max_length=256, nullable=True,
         sa_column_kwargs={"name": "image_field", "comment": "图片字段"},
     )
@@ -180,19 +183,16 @@ class SampleNormalModel(StringPKeyModel, table=True):
     # ── 树选择 (引用递归模型) ──
     tree_select_field: Annotated[
         str | None,
-        FieldOption(table_show=True, add_show=True, edit_show=True, detail_show=True,
-                    search_show=True, required=False, search_required=False,
-                    span=8, search_span=6,
-                    component=UIComponent.TREE_SELECT,
-                    data_option=DataOption(
-                        model_cls="SampleRecurseModel",
-                        lazy_load=True, method="POST",
-                        path="/recurse/query/all",
-                        label_field="label", value_field="model_id",
-                    )),
+        FieldOption(
+            show=True, search_show=True,
+            required=False, search_required=False,
+            span=12, search_span=4,
+            component=UIComponent.TREE_SELECT,
+            data_option=DataOption(model_cls="SampleRecurseModel", lazy_load=True, method="POST", path="/query/all", label_field="label", value_field="model_id")
+        ),
         EnableQuery(query_type=QueryType.EQ),
     ] = SQLModelField(
-        description="树选择字段 (TREE_SELECT，引用递归模型)",
+        description="树选择字段",
         sa_type=String, max_length=36, nullable=True,
         sa_column_kwargs={"name": "tree_select_field", "comment": "树选择字段"},
     )
@@ -200,13 +200,15 @@ class SampleNormalModel(StringPKeyModel, table=True):
     # ── JSON 编辑器 ──
     json_field: Annotated[
         list | None,
-        FieldOption(table_show=False, add_show=True, edit_show=True, detail_show=True,
-                    search_show=False,
-                    component=UIComponent.JSON_EDITOR,
-                    component_props={"rows": 6}),
+        FieldOption(
+            show=True, search_show=False,
+            span=24,
+            component=UIComponent.JSON_EDITOR,
+            component_props={"rows": 6}
+        ),
     ] = SQLModelField(
         default=None,
-        description="JSON 字段 (JSON_EDITOR)",
+        description="JSON 字段",
         sa_type=JSON, nullable=True,
         sa_column_kwargs={"name": "json_field", "comment": "JSON 字段"},
     )
@@ -214,14 +216,15 @@ class SampleNormalModel(StringPKeyModel, table=True):
     # ── 颜色选择 ──
     color_field: Annotated[
         str | None,
-        FieldOption(table_show=True, add_show=True, edit_show=True, detail_show=True,
-                    search_show=False, required=False, span=6,
-                    component=UIComponent.COLOR_PICKER,
-                    component_props=FieldOption.ColorPickerComponentProps(
-                        showAlpha=True, colorFormat="hex", style={"width": "32px"},
-                    )),
+        FieldOption(
+            show=True, search_show=False,
+            required=False,
+            span=6,
+            component=UIComponent.COLOR_PICKER,
+            component_props=FieldOption.ColorPickerComponentProps(showAlpha=True, colorFormat="hex", style={"width": "32px"})
+        ),
     ] = SQLModelField(
-        description="颜色字段 (COLOR_PICKER)",
+        description="颜色字段",
         sa_type=String, max_length=32, nullable=True,
         sa_column_kwargs={"name": "color_field", "comment": "颜色字段"},
     )
@@ -229,12 +232,14 @@ class SampleNormalModel(StringPKeyModel, table=True):
     # ── 标签输入 ──
     tag_field: Annotated[
         list[str] | None,
-        FieldOption(table_show=False, add_show=True, edit_show=True, detail_show=True,
-                    search_show=False,
-                    component=UIComponent.INPUT_TAG),
+        FieldOption(
+            show=True, search_show=False,
+            span=24,
+            component=UIComponent.INPUT_TAG
+        ),
     ] = SQLModelField(
         default=None,
-        description="标签字段 (TAG_INPUT)",
+        description="标签字段",
         sa_type=JSON, nullable=True,
         sa_column_kwargs={"name": "tag_field", "comment": "标签字段"},
     )
@@ -253,14 +258,13 @@ class SampleNormalModel(StringPKeyModel, table=True):
     action_column_width=200,
     layout=[
         "label", "code", "sort_order",
-        FieldOption(prop="parent_id", label="父节点", show=True, table_show=False,
-                    span=12, search_span=8,
-                    component=UIComponent.TREE_SELECT,
-                    data_option=DataOption(
-                        lazy_load=True, method="POST",
-                        path="/query/all",
-                        label_field="label", value_field="model_id",
-                    )),
+        FieldOption(
+            prop="parent_id", label="父节点",
+            show=True, table_show=False,
+            span=12, search_span=8,
+            component=UIComponent.TREE_SELECT,
+            data_option=DataOption(lazy_load=True, method="POST", path="/query/all", label_field="label", value_field="model_id")
+        ),
         FieldOption(prop="create_person", table_show=False, add_show=False, edit_show=False, search_show=False, detail_show=False, span=6),
         FieldOption(prop="create_timestamp", table_show=False, add_show=False, edit_show=False, search_show=False, span=6),
         FieldOption(prop="update_person", table_show=False, add_show=False, edit_show=False, search_show=False, detail_show=False, span=6),
@@ -281,10 +285,12 @@ class SampleRecurseModel(StringPKeyRecurseModel, table=True):
 
     label: Annotated[
         str | None,
-        FieldOption(table_show=True, add_show=True, edit_show=True, detail_show=True,
-                    search_show=True, required=True, search_required=False,
-                    span=12, search_span=8,
-                    component=UIComponent.INPUT),
+        FieldOption(
+            show=True, search_show=True,
+            required=True, search_required=False,
+            span=12, search_span=8,
+            component=UIComponent.INPUT
+        ),
         EnableQuery(query_type=QueryType.LIKE),
     ] = SQLModelField(
         description="节点名称",
@@ -294,23 +300,27 @@ class SampleRecurseModel(StringPKeyRecurseModel, table=True):
 
     code: Annotated[
         str | None,
-        FieldOption(table_show=True, add_show=True, edit_show=True, detail_show=True,
-                    search_show=True, required=True, search_required=False,
-                    span=8, search_span=6,
-                    component=UIComponent.INPUT),
+        FieldOption(
+            show=True, search_show=True,
+            required=True, search_required=False,
+            span=12, search_span=8,
+            component=UIComponent.INPUT
+        ),
         EnableQuery(query_type=QueryType.EQ),
     ] = SQLModelField(
-        description="节点编码 (唯一)",
+        description="节点编码",
         sa_type=String, max_length=64, nullable=False,
         sa_column_kwargs={"name": "code", "comment": "节点编码"},
     )
 
     sort_order: Annotated[
         int | None,
-        FieldOption(table_show=True, add_show=True, edit_show=True, detail_show=True,
-                    search_show=False, required=False,
-                    component=UIComponent.INPUT_NUMBER,
-                    component_props={"min": 0}),
+        FieldOption(
+            show=True, search_show=False,
+            required=False,
+            component=UIComponent.INPUT_NUMBER,
+            component_props={"min": 0}
+        ),
     ] = SQLModelField(
         default=0,
         description="排序号",
