@@ -17,11 +17,46 @@
 
 定制前端并不意味着要重写所有表格和表单：当前 Vue 样例直接嵌入 `AdminLayout`，继续复用底座的通用管理能力。
 
+## 界面预览
+
+以下截图展示样例的登录、普通模型、递归模型和字典管理界面。截图使用根路径部署，具体访问地址以所选样例的配置为准。
+
+### 登录页面
+
+应用登录入口，展示品牌标识、账号密码登录、注册与找回密码入口。
+
+![登录页面](docs/screenshots/login.png)
+
+### 普通模型列表
+
+由模型配置生成的列表与查询区域，包含字符串、下拉选择、树选择和多字段混合搜索。
+
+![普通模型列表](docs/screenshots/sample-normal-list.png)
+
+### 普通模型新增表单
+
+展示文本、数字、下拉选择、日期、开关、颜色、树选择、标签、图片上传和 JSON 等字段组件。
+
+![普通模型新增表单](docs/screenshots/sample-normal-create.png)
+
+### 递归模型新增表单
+
+通过节点名称、节点编码、排序号和父节点配置树形数据。
+
+![递归模型新增表单](docs/screenshots/sample-recurse-create.png)
+
+### 字典管理
+
+底座内置字典管理界面，展示样例选项、用户状态、是/否等字典及查询、维护入口。
+
+![字典管理](docs/screenshots/dictionary.png)
+
 ## 仓库结构
 
 ```text
 brtech-fusion-sample/
 ├── README.md
+├── docs/screenshots/             # README 界面截图
 ├── pyproject.toml                 # 仓库 Python 版本声明，不包含后端完整依赖
 ├── without_custom_frontend/
 │   ├── main.py                   # 应用入口、系统模块与业务路由注册
